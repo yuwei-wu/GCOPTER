@@ -28,9 +28,10 @@
 #include "gcopter/minco.hpp"
 #include "gcopter/flatness.hpp"
 #include "gcopter/lbfgs_gcopter.hpp"
+#include "gcopter/geo_utils.hpp"
 
 #include <Eigen/Eigen>
-#include <chrono>
+
 #include <cmath>
 #include <cfloat>
 #include <iostream>
@@ -821,9 +822,8 @@ namespace gcopter
             lbfgs_params.mem_size = 256;
             lbfgs_params.past = 3;
             lbfgs_params.min_step = 1.0e-32;
-            lbfgs_params.g_epsilon = 1.0e-8;
+            lbfgs_params.g_epsilon = 0.0;
             lbfgs_params.delta = relCostTol;
-            // auto start_timer = std::chrono::high_resolution_clock::now();
 
             int ret = lbfgs_gcopter::lbfgs_optimize(x,
                                             minCostFunctional,
@@ -832,15 +832,8 @@ namespace gcopter
                                             nullptr,
                                             this,
                                             lbfgs_params);
-            // auto end_timer = std::chrono::high_resolution_clock::now();
 
-            // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
-            //     end_timer - start_timer);
-
-
-            // std::cout << "optimization time is " << duration.count() / 1000.0 << std::endl;
-
-            if (ret >= 0 && minCostFunctional < 1.0e+4)
+            if (ret >= 0)
             {
                 forwardT(tau, times);
                 forwardP(xi, vPolyIdx, vPolytopes, points);

@@ -335,6 +335,15 @@ public:
         }
     }
 
+    inline bool is_empty() const
+    {
+        if (pieces.size() <= 0)
+        {
+            return true;
+        }
+        return false;
+    }
+    
     inline int getPieceNum() const
     {
         return pieces.size();

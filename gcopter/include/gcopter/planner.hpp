@@ -12,6 +12,8 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <sensor_msgs/PointCloud2.h>
 
+#include "plan_env/sdf_map.h"
+
 #include <cmath>
 #include <iostream>
 #include <string>
@@ -20,7 +22,6 @@
 #include <chrono>
 #include <random>
 
-#include <kr_planning_msgs/VoxelMap.h>
 
 
 namespace gcopter
@@ -87,8 +88,6 @@ private:
 
     Visualizer visualizer;
 
-    double goal_tol;
-
 
 public:
     GcopterPlanner(ros::NodeHandle& nh, const std::string& frame_id)
@@ -96,10 +95,9 @@ public:
       visualizer(nh, frame_id)
     {
 
-        nh.param("tol_pos", goal_tol, 0.1);
-
-        std::cout << "goal_tol " << goal_tol << std::endl;
+        std::cout << "config.integralIntervs " << config.integralIntervs  << std::endl;
  
+
         /***set up params***/
         quadratureRes = config.integralIntervs;
 
@@ -123,7 +121,6 @@ public:
         physicalParams(3) = config.vertDrag;
         physicalParams(4) = config.parasDrag;
         physicalParams(5) = config.speedEps;
-
     }
 
     inline Trajectory<5> getTraj()
@@ -138,96 +135,42 @@ public:
     }
 
 
-    inline void setMap(const kr_planning_msgs::VoxelMap& map)
+    inline void setMap(std::shared_ptr<bg_planner::SDFMap>& map)
     {
         /// step one: convert map
-        const Eigen::Vector3i xyz(map.dim.x,
-                                  map.dim.y,
-                                  map.dim.z);
+        const Eigen::Vector3i xyz(map->mp_->map_voxel_num_(0),
+                                  map->mp_->map_voxel_num_(1),
+                                  map->mp_->map_voxel_num_(2));
 
-        const Eigen::Vector3d offset(map.origin.x, map.origin.y, map.origin.z);
-        voxelMap = voxel_map::VoxelMap(xyz, offset, map.resolution);
-        for (int m = 0; m < map.dim.z; m++) {
-            for (int j = 0; j < map.dim.y; j++) {
-                for (int i = 0; i < map.dim.x; i++) {
-                    Eigen::Vector3i idx(i, j, m);
-                    int vl = map.data[map.dim.y * map.dim.x * m +  map.dim.x * j + i ] ;
-                    if(vl == 100)
-                    {   
+        const Eigen::Vector3d offset(map->mp_->map_origin_(0), map->mp_->map_origin_(1), map->mp_->map_origin_(2));
+        voxelMap = voxel_map::VoxelMap(xyz, offset, map->mp_->resolution_);
+        for (int x = map->mp_->box_min_(0); x < map->mp_->box_max_(0); ++x)
+            for (int y = map->mp_->box_min_(1); y < map->mp_->box_max_(1); ++y)
+                for (int z = map->mp_->box_min_(2); z < map->mp_->box_max_(2); ++z) {
+                    if (map->getOccupancy(Eigen::Vector3i(x, y, z)) == bg_planner::SDFMap::OCCUPIED)
+                    {
+                        Eigen::Vector3i idx(x, y, z);
                         voxelMap.setOccupied(idx);
                     }
                 }
-            }
-        }
-
-        //voxelMap.dilate(std::ceil(config.dilateRadius / voxelMap.getScale()));
+        // for (int m = 0; m < map->mp_->map_voxel_num_(2); m++) {
+        //     for (int j = 0; j < map->mp_->map_voxel_num_(1); j++) {
+        //         for (int i = 0; i < map->mp_->map_voxel_num_(0); i++) {
+        //             Eigen::Vector3i idx(i, j, m);
+        //             int vl = map->md_->occupancy_buffer_[map.dim.y * map.dim.x * m +  map.dim.x * j + i ] ;
+        //             if(vl == 100)
+        //             {   
+        //                 voxelMap.setOccupied(idx);
+        //             }
+        //         }
+        //     }
+        // }
+        voxelMap.dilate(std::ceil(config.dilateRadius / voxelMap.getScale()));
     }
-
-
-
-    inline Eigen::MatrixX4d convert(const Eigen::MatrixXd &hPoly)
-    {
-        int m = hPoly.cols();
-        Eigen::MatrixX4d newhPoly(m, 4);
-
-        newhPoly.leftCols<3>() = (hPoly.bottomRows<3>()).transpose();
-
-        for (int i = 0; i < m; i ++)
-        {
-            newhPoly(i, 3) = - (hPoly.col(i).tail<3>()).dot(hPoly.col(i).head<3>());
-        }
-
-        return newhPoly;
-    }
-
-
-    inline bool planSST(const Eigen::Matrix3d& init,
-                             const Eigen::Matrix3d& fini,
-                             std::vector<Eigen::VectorXd>& route) // p, v, a, t
-
-    {
-
-        sfc_gen::dyplanPath<voxel_map::VoxelMap>(init,
-                                                 fini,
-                                                 voxelMap.getOrigin(),
-                                                 voxelMap.getCorner(),
-                                                 &voxelMap, 
-                                                 config.TimeoutRRT, goal_tol,
-                                                 route);
-        if (route.size() <= 0)
-        {
-            return false;
-        } 
-        return true;                                 
-        
-    }
-
-
-    inline bool planRRT(const Eigen::Vector3d& init,
-                        const Eigen::Vector3d& fini,
-                        std::vector<Eigen::Vector3d>& route) // p, v, a, t
-
-    {
-        sfc_gen::planPath<voxel_map::VoxelMap>(init,
-                                            fini,
-                                            voxelMap.getOrigin(),
-                                            voxelMap.getCorner(),
-                                            &voxelMap, 
-                                            config.TimeoutRRT, goal_tol,
-                                            route);
-        if (route.size() <= 0)
-        {
-            return false;
-        } 
-        return true;                                 
-        
-    }
-
 
     inline bool plan(const Eigen::Matrix3d& init, 
                      const Eigen::Matrix3d& fini, 
-                     std::vector<Eigen::Vector3d>& route,
-                     std::vector<Eigen::MatrixXd>& roughPolys)
+                     std::vector<Eigen::Vector3d>& route)
     {
 
         // route.clear(); #uncomment this line if you want to use RRT
@@ -241,53 +184,37 @@ public:
                                                    endPVA.col(0),
                                                    voxelMap.getOrigin(),
                                                    voxelMap.getCorner(),
-                                                   &voxelMap, config.TimeoutRRT, goal_tol,
+                                                   &voxelMap, config.TimeoutRRT,
                                                    route);
+
             if (route.size() <= 0)
             {
                 ROS_ERROR("Failed to plan RRT path!");
                 return false;
             }                                    
         }
+
+        auto plan_t1 = ros::Time::now();
         endPVA.col(0) = route.back();
 
         /* corridor generation */
+        std::vector<Eigen::Vector3d> pc;
+        voxelMap.getSurf(pc);
+
         std::vector<Eigen::MatrixX4d> hPolys;
+        sfc_gen::getPolyConst(route,
+                                pc,
+                                voxelMap.getOrigin(),
+                                voxelMap.getCorner(),
+                                3.0,
+                                2.0,
+                                hPolys);
+        sfc_gen::shortCut(hPolys);
 
-        if(roughPolys.size() > 0)
-        {
-            for (const auto &roughPoly : roughPolys)
-            {
-                hPolys.push_back(convert(roughPoly));
-            }
-            
+        ROS_INFO("Got %d convex hulls.", (int)hPolys.size());
+        ROS_WARN("[GCOPTER] SFC time: %lf", (ros::Time::now()-plan_t1).toSec());
 
-        }else
-        {
-
-            std::vector<Eigen::Vector3d> pc;
-            voxelMap.getSurf(pc);
-
-            sfc_gen::getPolyConst(route,
-                                    pc,
-                                    voxelMap.getOrigin(),
-                                    voxelMap.getCorner(),
-                                    3.0,
-                                    3.0,
-                                    hPolys);
-            // sfc_gen::convexCover(route,
-            //                         pc,
-            //                         voxelMap.getOrigin(),
-            //                         voxelMap.getCorner(),
-            //                         7.0,
-            //                         3.0,
-            //                         hPolys);
-            sfc_gen::shortCut(hPolys);
-
-            ROS_INFO("Got %d convex hulls.", (int)hPolys.size());
-
-        }
-
+        auto time2 = ros::Time::now();
         gcopter::GCOPTER_PolytopeSFC gcopter;
 
         traj.clear();
@@ -305,32 +232,24 @@ public:
             return false;
         }
 
+
         if (std::isinf(gcopter.optimize(traj, config.relCostTol)))
         {
             ROS_ERROR("Failed to optimize GCOPTER!");
             return false;
         }
+        ROS_WARN("[GCOPTER] plan time: %lf", (ros::Time::now()-time2).toSec());
 
-        ROS_INFO("Got a trajectory with %d pieces.", traj.getPieceNum());
+        ROS_INFO("[GCOPTER] Got a trajectory with %d pieces.", traj.getPieceNum());
 
         if (traj.getPieceNum() > 0)
         {
             
-            // for (double cur_time = 0.0; cur_time <= traj.getTotalDuration(); cur_time += 0.02)
-            // {
-            //     Eigen::Vector3d pos = traj.getPos(cur_time);
-            //     if (voxelMap.query(pos))
-            //     {
-            //         std::cout <<" !!!!!!!!!!!!!!!!!!!!!pos  "  << pos << std::endl;
-            //         std::cout << "!!!!!!!!!!!!!!!!infeasible ... "<< std::endl;
-            //         return false;
-            //     }
-            // }
-            std::cout << "success! " << std::endl;
+            // std::cout << "success! " << std::endl;
 
-            // visualizer.visualizeStartGoal(endPVA.col(0), 0.5, 1);
-            // visualizer.visualize(traj, route);
-            // visualizer.visualizePolytope(hPolys);
+            visualizer.visualizeStartGoal(endPVA.col(0), 0.5, 1);
+            visualizer.visualize(traj, route);
+            visualizer.visualizePolytope(hPolys);
 
             return true;
         }

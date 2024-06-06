@@ -8,6 +8,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -fPIC")
 
 find_package(Eigen3 REQUIRED)
 find_package(ompl REQUIRED)
+find_package(PCL 1.7 REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -15,12 +16,13 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   sensor_msgs
   visualization_msgs
-  kr_planning_msgs
+  plan_env
 )
 
 include_directories(
     ${catkin_INCLUDE_DIRS}
     ${OMPL_INCLUDE_DIRS}
+    ${PCL_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIRS}
     include
 )
@@ -45,6 +47,7 @@ add_library(gcopter
   )
 target_link_libraries(gcopter
   ${OMPL_LIBRARIES}
+  ${PCL_LIBRARIES}
   ${catkin_LIBRARIES}
   )
 add_dependencies(gcopter

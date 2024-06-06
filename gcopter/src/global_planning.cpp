@@ -10,6 +10,7 @@
 #include <gcopter/planner.hpp>
 
 
+#include "plan_env/sdf_map.h"
 
 #include <ros/ros.h>
 #include <ros/console.h>
@@ -62,8 +63,8 @@ public:
         // const Eigen::Vector3d offset(mapBound[0], mapBound[2], mapBound[4]);
         // voxelMap = voxel_map::VoxelMap(xyz, offset, voxelWidth);
 
-        mapSub = nh.subscribe(mapTopic, 1, &PlannerServer::mapCallBack, this,
-                              ros::TransportHints().tcpNoDelay());
+        // mapSub = nh.subscribe(mapTopic, 1, &PlannerServer::mapCallBack, this,
+        //                       ros::TransportHints().tcpNoDelay());
 
         targetSub = nh.subscribe(targetTopic, 1, &PlannerServer::targetCallBack, this,
                                  ros::TransportHints().tcpNoDelay());
@@ -72,15 +73,15 @@ public:
                    
     }
 
-    inline void mapCallBack(const kr_planning_msgs::VoxelMap::ConstPtr &map_resp)
-    {
-        if (!mapInitialized) //TODO: this needs to be called multiple times depending on receding horizon or not
-        {
+    // inline void mapCallBack(const kr_planning_msgs::VoxelMap::ConstPtr &map_resp)
+    // {
+    //     if (!mapInitialized)
+    //     {
 
-            gcopter_planner->setMap(*map_resp);
-            mapInitialized = true;
-        }
-    }
+    //         gcopter_planner->setMap(*map_resp);
+    //         mapInitialized = true;
+    //     }
+    // }
 
 
 
@@ -94,8 +95,8 @@ public:
             iniState << startGoal.front(), Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero();
             finState << startGoal.back(), Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero();
 
-            std::vector<Eigen::MatrixXd> plys;
-            if(gcopter_planner->plan(iniState, finState, route, plys))
+
+            if(gcopter_planner->plan(iniState, finState, route))
             {
                 traj = gcopter_planner->getTraj();
             }
