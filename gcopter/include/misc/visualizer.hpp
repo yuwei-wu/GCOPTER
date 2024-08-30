@@ -34,8 +34,6 @@ private:
     ros::Publisher edgePub;
     ros::Publisher spherePub;
 
-    std::string frame_id;
-
 public:
     ros::Publisher speedPub;
     ros::Publisher thrPub;
@@ -43,7 +41,7 @@ public:
     ros::Publisher bdrPub;
 
 public:
-    Visualizer(ros::NodeHandle &nh_, const std::string& fid)
+    Visualizer(ros::NodeHandle &nh_)
         : nh(nh_)
     {
         routePub = nh.advertise<visualization_msgs::Marker>("/visualizer/route", 10);
@@ -56,8 +54,6 @@ public:
         thrPub = nh.advertise<std_msgs::Float64>("/visualizer/total_thrust", 1000);
         tiltPub = nh.advertise<std_msgs::Float64>("/visualizer/tilt_angle", 1000);
         bdrPub = nh.advertise<std_msgs::Float64>("/visualizer/body_rate", 1000);
-
-        frame_id = fid;
     }
 
     // Visualize the trajectory and its front-end path
@@ -70,7 +66,7 @@ public:
         routeMarker.id = 0;
         routeMarker.type = visualization_msgs::Marker::LINE_LIST;
         routeMarker.header.stamp = ros::Time::now();
-        routeMarker.header.frame_id = frame_id;
+        routeMarker.header.frame_id = "odom";
         routeMarker.pose.orientation.w = 1.00;
         routeMarker.action = visualization_msgs::Marker::ADD;
         routeMarker.ns = "route";
@@ -92,7 +88,7 @@ public:
         wayPointsMarker.scale.z = 0.35;
 
         trajMarker = routeMarker;
-        trajMarker.header.frame_id = frame_id;
+        trajMarker.header.frame_id = "odom";
         trajMarker.id = 0;
         trajMarker.ns = "trajectory";
         trajMarker.color.r = 0.00;
@@ -199,7 +195,7 @@ public:
 
         meshMarker.id = 0;
         meshMarker.header.stamp = ros::Time::now();
-        meshMarker.header.frame_id = frame_id;
+        meshMarker.header.frame_id = "odom";
         meshMarker.pose.orientation.w = 1.00;
         meshMarker.action = visualization_msgs::Marker::ADD;
         meshMarker.type = visualization_msgs::Marker::TRIANGLE_LIST;
@@ -263,7 +259,7 @@ public:
         sphereMarkers.id = 0;
         sphereMarkers.type = visualization_msgs::Marker::SPHERE_LIST;
         sphereMarkers.header.stamp = ros::Time::now();
-        sphereMarkers.header.frame_id = frame_id;
+        sphereMarkers.header.frame_id = "odom";
         sphereMarkers.pose.orientation.w = 1.00;
         sphereMarkers.action = visualization_msgs::Marker::ADD;
         sphereMarkers.ns = "spheres";
@@ -297,7 +293,7 @@ public:
         sphereMarkers.id = sg;
         sphereMarkers.type = visualization_msgs::Marker::SPHERE_LIST;
         sphereMarkers.header.stamp = ros::Time::now();
-        sphereMarkers.header.frame_id = frame_id;
+        sphereMarkers.header.frame_id = "odom";
         sphereMarkers.pose.orientation.w = 1.00;
         sphereMarkers.action = visualization_msgs::Marker::ADD;
         sphereMarkers.ns = "StartGoal";

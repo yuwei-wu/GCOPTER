@@ -27,7 +27,7 @@
 #ifndef FIRI_HPP
 #define FIRI_HPP
 
-#include "lbfgs_gcopter.hpp"
+#include "lbfgs.hpp"
 #include "sdlp.hpp"
 
 #include <Eigen/Eigen>
@@ -209,7 +209,7 @@ namespace firi
         x(8) = L(2, 0);
 
         double minCost;
-        lbfgs_gcopter::lbfgs_parameter_t paramsMVIE;
+        lbfgs::lbfgs_parameter_t paramsMVIE;
         paramsMVIE.mem_size = 18;
         paramsMVIE.g_epsilon = 0.0;
         paramsMVIE.min_step = 1.0e-32;
@@ -218,7 +218,7 @@ namespace firi
         *pSmoothEps = 1.0e-2;
         *pPenaltyWt = 1.0e+3;
 
-        int ret = lbfgs_gcopter::lbfgs_optimize(x,
+        int ret = lbfgs::lbfgs_optimize(x,
                                         minCost,
                                         &costMVIE,
                                         nullptr,
@@ -228,7 +228,7 @@ namespace firi
 
         if (ret < 0)
         {
-            printf("FIRI WARNING: %s\n", lbfgs_gcopter::lbfgs_strerror(ret));
+            printf("FIRI WARNING: %s\n", lbfgs::lbfgs_strerror(ret));
         }
 
         p = x.head<3>() + interior;

@@ -1,11 +1,11 @@
-#ifndef LBFGS_GCOPTER_HPP
-#define LBFGS_GCOPTER_HPP
+#ifndef LBFGS_HPP
+#define LBFGS_HPP
 
 #include <Eigen/Eigen>
 #include <cmath>
 #include <algorithm>
 
-namespace lbfgs_gcopter
+namespace lbfgs
 {
     // ----------------------- Data Type Part -----------------------
 

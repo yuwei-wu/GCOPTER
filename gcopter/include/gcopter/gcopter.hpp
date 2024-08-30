@@ -27,10 +27,10 @@
 
 #include "gcopter/minco.hpp"
 #include "gcopter/flatness.hpp"
-#include "gcopter/lbfgs_gcopter.hpp"
+#include "gcopter/lbfgs.hpp"
 
 #include <Eigen/Eigen>
-#include <chrono>
+
 #include <cmath>
 #include <cfloat>
 #include <iostream>
@@ -76,7 +76,7 @@ namespace gcopter
         Eigen::VectorXd physicalPm;
         double allocSpeed;
 
-        lbfgs_gcopter::lbfgs_parameter_t lbfgs_params;
+        lbfgs::lbfgs_parameter_t lbfgs_params;
 
         Eigen::Matrix3Xd points;
         Eigen::VectorXd times;
@@ -201,7 +201,7 @@ namespace gcopter
             const int sizeP = P.cols();
 
             double minSqrD;
-            lbfgs_gcopter::lbfgs_parameter_t tiny_nls_params;
+            lbfgs::lbfgs_parameter_t tiny_nls_params;
             tiny_nls_params.past = 0;
             tiny_nls_params.delta = 1.0e-5;
             tiny_nls_params.g_epsilon = FLT_EPSILON;
@@ -218,7 +218,7 @@ namespace gcopter
                 ovPoly.rightCols(k) = vPolys[l];
                 Eigen::VectorXd x(k);
                 x.setConstant(sqrt(1.0 / k));
-                lbfgs_gcopter::lbfgs_optimize(x,
+                lbfgs::lbfgs_optimize(x,
                                       minSqrD,
                                       &GCOPTER_PolytopeSFC::costTinyNLS,
                                       nullptr,
@@ -611,12 +611,12 @@ namespace gcopter
             dataPtrs[1] = (void *)(&ini);
             dataPtrs[2] = (void *)(&fin);
             dataPtrs[3] = (void *)(&vPolys);
-            lbfgs_gcopter::lbfgs_parameter_t shortest_path_params;
+            lbfgs::lbfgs_parameter_t shortest_path_params;
             shortest_path_params.past = 3;
             shortest_path_params.delta = 1.0e-3;
             shortest_path_params.g_epsilon = 1.0e-5;
 
-            lbfgs_gcopter::lbfgs_optimize(xi,
+            lbfgs::lbfgs_optimize(xi,
                                   minDistance,
                                   &GCOPTER_PolytopeSFC::costDistance,
                                   nullptr,
@@ -821,26 +821,18 @@ namespace gcopter
             lbfgs_params.mem_size = 256;
             lbfgs_params.past = 3;
             lbfgs_params.min_step = 1.0e-32;
-            lbfgs_params.g_epsilon = 1.0e-8;
+            lbfgs_params.g_epsilon = 0.0;
             lbfgs_params.delta = relCostTol;
-            // auto start_timer = std::chrono::high_resolution_clock::now();
 
-            int ret = lbfgs_gcopter::lbfgs_optimize(x,
+            int ret = lbfgs::lbfgs_optimize(x,
                                             minCostFunctional,
                                             &GCOPTER_PolytopeSFC::costFunctional,
                                             nullptr,
                                             nullptr,
                                             this,
                                             lbfgs_params);
-            // auto end_timer = std::chrono::high_resolution_clock::now();
 
-            // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
-            //     end_timer - start_timer);
-
-
-            // std::cout << "optimization time is " << duration.count() / 1000.0 << std::endl;
-
-            if (ret >= 0 && minCostFunctional < 1.0e+4)
+            if (ret >= 0)
             {
                 forwardT(tau, times);
                 forwardP(xi, vPolyIdx, vPolytopes, points);
@@ -851,7 +843,9 @@ namespace gcopter
             {
                 traj.clear();
                 minCostFunctional = INFINITY;
-                ROS_ERROR("Optimization Failed: %s", lbfgs_gcopter::lbfgs_strerror(ret));
+                std::cout << "Optimization Failed: "
+                          << lbfgs::lbfgs_strerror(ret)
+                          << std::endl;
             }
 
             return minCostFunctional;

@@ -191,7 +191,6 @@ namespace voxel_map
         inline bool query(const Eigen::Vector3d &pos) const
         {
             const Eigen::Vector3i id = ((pos - o) / scale).cast<int>();
-
             if (id(0) >= 0 && id(1) >= 0 && id(2) >= 0 &&
                 id(0) < mapSize(0) && id(1) < mapSize(1) && id(2) < mapSize(2))
             {

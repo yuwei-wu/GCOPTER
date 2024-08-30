@@ -652,6 +652,23 @@ namespace minco
 
             gradByTimes += partialGradByTimes;
         }
+
+
+        inline void propogateGrad(const Eigen::MatrixX3d &partialGradByCoeffs,
+                                  Eigen::Matrix3Xd &gradByPoints)
+
+        {
+            gradByPoints.resize(3, N - 1);
+            Eigen::MatrixX3d adjGrad = partialGradByCoeffs;
+            A.solveAdj(adjGrad);
+
+            for (int i = 0; i < N - 1; i++)
+            {
+                gradByPoints.col(i) = adjGrad.row(6 * i + 5).transpose();
+            }
+
+        }
+        
     };
 
     // MINCO for s=4 and non-uniform time
@@ -994,6 +1011,7 @@ namespace minco
             gradByTimes(N - 1) = B2.cwiseProduct(adjGrad.block<4, 3>(8 * N - 4, 0)).sum();
             gradByTimes += partialGradByTimes;
         }
+
     };
 
 }

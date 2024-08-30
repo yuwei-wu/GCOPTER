@@ -1,16 +1,16 @@
-MapTopic:                   '/quadrotor/mapper/local_voxel_no_inflation_map'
+MapTopic:                   '/voxel_map'
 
 TargetTopic:                '/move_base_simple/goal'
 
-DilateRadius:               0.05
+DilateRadius:               0.5
 
-VoxelWidth:                 0.10
+VoxelWidth:                 0.25
 
-MapBound:                   [-20, 20, -20, 20, -5, 5]
+MapBound:                   [-25.0, 25.0, -25.0, 25.0, 0.0, 5.0]
 
-TimeoutRRT:                 0.2
+TimeoutRRT:                 0.02
 
-MaxVelMag:                  3.0
+MaxVelMag:                  4.0
 
 MaxBdrMag:                  2.1
 

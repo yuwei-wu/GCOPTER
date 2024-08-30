@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 2.8.3)
 
 project(gcopter)
 
@@ -15,7 +15,6 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   sensor_msgs
   visualization_msgs
-  kr_planning_msgs
 )
 
 include_directories(
@@ -25,13 +24,6 @@ include_directories(
     include
 )
 
-
-catkin_package(
- INCLUDE_DIRS include
- DEPENDS OMPL
- LIBRARIES gcopter
-)
-
 add_executable(global_planning src/global_planning.cpp)
 
 target_link_libraries(global_planning
@@ -39,6 +31,11 @@ target_link_libraries(global_planning
   ${catkin_LIBRARIES}
 )
 
+catkin_package(
+ INCLUDE_DIRS include
+ DEPENDS OMPL
+ LIBRARIES gcopter
+)
 
 add_library(gcopter
   src/global_planning.cpp
