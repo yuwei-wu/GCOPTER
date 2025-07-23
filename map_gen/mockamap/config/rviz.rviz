@@ -160,7 +160,7 @@ Visualization Manager:
     - Boost Property: 0.5
       Class: rviz/FPSMotionTool
       Fallback Tool: rviz/Interact
-      Fallback ViewController: rviz/Orbit
+      Fallback ViewController: rviz_default_plugins/Orbit
       Fly Mode: false
       Left Hand Mode: false
       Step Length: 0.1
@@ -177,7 +177,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz/Orbit
+      Class: rviz_default_plugins/Orbit
       Distance: 9.57022
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06

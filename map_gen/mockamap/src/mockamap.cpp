@@ -1,5 +1,5 @@
-#include <ros/ros.h>
-#include <sensor_msgs/PointCloud2.h>
+#include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
 
 #include <algorithm>
 #include <iostream>
@@ -11,19 +11,18 @@
 
 #include "maps.hpp"
 
-void
-optimizeMap(mocka::Maps::BasicInfo& in)
+void optimizeMap(mocka::Maps::BasicInfo& in)
 {
-  std::vector<int>* temp = new std::vector<int>;
+  std::vector<int> temp;
 
-  pcl::KdTreeFLANN<pcl::PointXYZ>     kdtree;
+  pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
 
   cloud->width  = in.cloud->width;
   cloud->height = in.cloud->height;
   cloud->points.resize(cloud->width * cloud->height);
 
-  for (int i = 0; i < cloud->width; i++)
+  for (size_t i = 0; i < cloud->width; i++)
   {
     cloud->points[i].x = in.cloud->points[i].x;
     cloud->points[i].y = in.cloud->points[i].y;
@@ -31,94 +30,98 @@ optimizeMap(mocka::Maps::BasicInfo& in)
   }
 
   kdtree.setInputCloud(cloud);
-  double radius = 1.75 / in.scale; // 1.75 is the rounded up value of sqrt(3)
+  double radius = 1.75 / in.scale;  // 1.75 is rounded up sqrt(3)
 
-  for (int i = 0; i < cloud->width; i++)
+  for (size_t i = 0; i < cloud->width; i++)
   {
-    std::vector<int>   pointIdxRadiusSearch;
+    std::vector<int> pointIdxRadiusSearch;
     std::vector<float> pointRadiusSquaredDistance;
 
     if (kdtree.radiusSearch(cloud->points[i], radius, pointIdxRadiusSearch,
                             pointRadiusSquaredDistance) >= 27)
     {
-      temp->push_back(i);
+      temp.push_back(i);
     }
   }
-  for (int i = temp->size() - 1; i >= 0; i--)
+
+  // Erase points in reverse order to maintain valid indices
+  for (auto it = temp.rbegin(); it != temp.rend(); ++it)
   {
-    in.cloud->points.erase(in.cloud->points.begin() +
-                           temp->at(i)); // erasing the enclosed points
+    in.cloud->points.erase(in.cloud->points.begin() + *it);
   }
-  in.cloud->width -= temp->size();
+
+  in.cloud->width -= static_cast<int>(temp.size());
 
   pcl::toROSMsg(*in.cloud, *in.output);
   in.output->header.frame_id = "odom";
-  ROS_INFO("finish: number of points after optimization %d", in.cloud->width);
-  delete temp;
-  return;
+
+  RCLCPP_INFO(rclcpp::get_logger("maps"), "finish: number of points after optimization %d", in.cloud->width);
 }
 
-int
-main(int argc, char** argv)
+int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "mockamap");
-  ros::NodeHandle nh;
-  ros::NodeHandle nh_private("~");
+  rclcpp::init(argc, argv);
 
-  ros::Publisher pcl_pub =
-    nh.advertise<sensor_msgs::PointCloud2>("mock_map", 1);
-  pcl::PointCloud<pcl::PointXYZ> cloud;
-  sensor_msgs::PointCloud2       output;
-  // Fill in the cloud data
+  auto node = rclcpp::Node::make_shared("mockamap");
+
+  auto pcl_pub = node->create_publisher<sensor_msgs::msg::PointCloud2>("mock_map", 1);
+
+  auto cloud = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
+  auto output = std::make_shared<sensor_msgs::msg::PointCloud2>();
 
   int seed;
-
-  int sizeX;
-  int sizeY;
-  int sizeZ;
-
+  int sizeX, sizeY, sizeZ;
   double scale;
   double update_freq;
-
   int type;
 
-  nh_private.param("seed", seed, 4546);
-  nh_private.param("update_freq", update_freq, 1.0);
-  nh_private.param("resolution", scale, 0.38);
-  nh_private.param("x_length", sizeX, 100);
-  nh_private.param("y_length", sizeY, 100);
-  nh_private.param("z_length", sizeZ, 10);
+  node->declare_parameter("seed", 4546);
+  node->declare_parameter("update_freq", 1.0);
+  node->declare_parameter("resolution", 0.38);
+  node->declare_parameter("x_length", 100);
+  node->declare_parameter("y_length", 100);
+  node->declare_parameter("z_length", 10);
+  node->declare_parameter("type", 1);
 
-  nh_private.param("type", type, 1);
+  node->get_parameter("seed", seed);
+  node->get_parameter("update_freq", update_freq);
+  node->get_parameter("resolution", scale);
+  node->get_parameter("x_length", sizeX);
+  node->get_parameter("y_length", sizeY);
+  node->get_parameter("z_length", sizeZ);
+  node->get_parameter("type", type);
 
   scale = 1 / scale;
-  sizeX = sizeX * scale;
-  sizeY = sizeY * scale;
-  sizeZ = sizeZ * scale;
+  sizeX = static_cast<int>(sizeX * scale);
+  sizeY = static_cast<int>(sizeY * scale);
+  sizeZ = static_cast<int>(sizeZ * scale);
 
   mocka::Maps::BasicInfo info;
-  info.nh_private = &nh_private;
+  // Note: You need to update Maps::BasicInfo to hold rclcpp::Node::SharedPtr instead of ros::NodeHandle*
+  info.node = node; 
   info.sizeX      = sizeX;
   info.sizeY      = sizeY;
   info.sizeZ      = sizeZ;
   info.seed       = seed;
   info.scale      = scale;
-  info.output     = &output;
-  info.cloud      = &cloud;
+  info.output     = std::shared_ptr<sensor_msgs::msg::PointCloud2>(output);
+  info.cloud      = cloud;
 
   mocka::Maps map;
   map.setInfo(info);
   map.generate(type);
 
-  //  optimizeMap(info);
+  // optimizeMap(info);
 
-  //! @note publish loop
-  ros::Rate loop_rate(update_freq);
-  while (ros::ok())
+  rclcpp::Rate loop_rate(update_freq);
+
+  while (rclcpp::ok())
   {
-    pcl_pub.publish(output);
-    ros::spinOnce();
+    pcl_pub->publish(*output);
+    rclcpp::spin_some(node);
     loop_rate.sleep();
   }
+
+  rclcpp::shutdown();
   return 0;
 }

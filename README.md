@@ -1,6 +1,31 @@
-# GCOPTER
+# GCOPTER ROS2
 
 This is a revised version for benchmarking used by Kumar Lab. 
+
+## Usage
+
+### Prerequisites
+
+Before running the code, make sure you have ROS 2 (Humble) installed. You may also need to install some additional dependencies:
+
+```bash
+sudo apt update
+sudo apt install ros-humble-pcl-conversions ros-humble-pcl-ros
+sudo apt install libpcl-dev libompl-dev
+```
+
+### Build and Run
+
+```bash
+mkdir -p test_ws/src
+cd test_ws/src
+git clone -b ros2 https://github.com/yuwei-wu/GCOPTER.git
+cd ../
+colcon build
+source install/setup.bash
+ros2 launch gcopter global_planning.launch.py
+```
+
 
 
 __GCOPTER__ is an efficient and versatile multicopter trajectory optimizer built upon a novel sparse trajectory representation named [__MINCO__](https://arxiv.org/pdf/2103.00190.pdf). __User-defined state-input constraints__ for dynamics involving [__nonlinear drag effects__](https://github.com/ZJU-FAST-Lab/GCOPTER/blob/main/misc/flatness.pdf) are supported.
