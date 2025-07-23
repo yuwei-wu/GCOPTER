@@ -17,13 +17,35 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
 )
 
-include_directories(
-    ${catkin_INCLUDE_DIRS}
-    ${OMPL_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIRS}
-    include
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES gcopter
+  DEPENDS OMPL
 )
 
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${OMPL_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
+)
+
+## Library
+add_library(gcopter
+  src/global_planning.cpp
+)
+
+target_link_libraries(gcopter
+  ${OMPL_LIBRARIES}
+  ${catkin_LIBRARIES}
+)
+
+add_dependencies(gcopter
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+)
+
+## Executable
 add_executable(global_planning src/global_planning.cpp)
 
 target_link_libraries(global_planning
@@ -31,20 +53,7 @@ target_link_libraries(global_planning
   ${catkin_LIBRARIES}
 )
 
-catkin_package(
- INCLUDE_DIRS include
- DEPENDS OMPL
- LIBRARIES gcopter
-)
-
-add_library(gcopter
-  src/global_planning.cpp
-  )
-target_link_libraries(gcopter
-  ${OMPL_LIBRARIES}
-  ${catkin_LIBRARIES}
-  )
-add_dependencies(gcopter
-  ${${PROJECT_NAME}_EXPORTED_TARGETS} 
+add_dependencies(global_planning
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS}
-  )
+)
