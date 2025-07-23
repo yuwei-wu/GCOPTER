@@ -374,6 +374,38 @@ public:
         return positions;
     }
 
+
+    inline double getEnergy(int order) const
+    {
+        int N = getPieceNum();
+        double energy = 0.0;
+
+        if (order != 5)
+        {
+            std::cout << "Only support 5th order trajectory" << std::endl;
+            return 0.0;
+        }
+        
+        Eigen::VectorXd T1 = getDurations();
+        Eigen::VectorXd T2 = T1.cwiseProduct(T1);
+        Eigen::VectorXd T3 = T2.cwiseProduct(T1);
+        Eigen::VectorXd T4 = T2.cwiseProduct(T2);
+        Eigen::VectorXd T5 = T3.cwiseProduct(T2);
+
+        for (int i = 0; i < N; i++)
+        {   
+            auto b = pieces[i].getCoeffMat();
+            energy += 36.0 * b.col(2).squaredNorm() * T1(i) +
+                        144.0 * b.col(1).dot(b.col(2)) * T2(i) +
+                        192.0 * b.col(1).squaredNorm() * T3(i) +
+                        240.0 * b.col(0).dot(b.col(2)) * T3(i) +
+                        720.0 * b.col(0).dot(b.col(1)) * T4(i) +
+                        720.0 * b.col(0).squaredNorm() * T5(i);
+        }
+    
+        return energy;
+    }
+
     inline const Piece<D> &operator[](int i) const
     {
         return pieces[i];

@@ -47,7 +47,7 @@ namespace sfc_gen
                            const Eigen::Vector3d &g,
                            const Eigen::Vector3d &lb,
                            const Eigen::Vector3d &hb,
-                           const Map *mapPtr,
+                           Map *mapPtr,
                            const double &timeout,
                            std::vector<Eigen::Vector3d> &p)
     {

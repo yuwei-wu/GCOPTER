@@ -24,11 +24,27 @@ include_directories(
     include
 )
 
-catkin_package()
-
 add_executable(global_planning src/global_planning.cpp)
 
 target_link_libraries(global_planning
   ${OMPL_LIBRARIES}
   ${catkin_LIBRARIES}
 )
+
+catkin_package(
+ INCLUDE_DIRS include
+ DEPENDS OMPL
+ LIBRARIES gcopter
+)
+
+add_library(gcopter
+  src/global_planning.cpp
+  )
+target_link_libraries(gcopter
+  ${OMPL_LIBRARIES}
+  ${catkin_LIBRARIES}
+  )
+add_dependencies(gcopter
+  ${${PROJECT_NAME}_EXPORTED_TARGETS} 
+  ${catkin_EXPORTED_TARGETS}
+  )
