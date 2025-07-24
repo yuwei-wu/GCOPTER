@@ -33,6 +33,27 @@ source devel/setup.bash
 roslaunch gcopter global_planning.launch
 ```
 
+### ROS Topics Overview
+
+```
+/move_base_simple/goal (geometry_msgs/PoseStamped)
+    - Uses 2D Nav Goal to send start and end poses
+/voxel_map (sensor_msgs/PointCloud2)
+    - Publishes a 3D voxel grid map of the environment
+
+/visualizer/body_rate (geometry_msgs/Vector3Stamped)
+/visualizer/edge (visualization_msgs/Marker)
+/visualizer/mesh (visualization_msgs/Marker)
+/visualizer/route (nav_msgs/Path)
+/visualizer/speed (std_msgs/Float32)
+/visualizer/spheres (visualization_msgs/Marker)
+/visualizer/tilt_angle (std_msgs/Float32)
+/visualizer/total_thrust (std_msgs/Float32)
+/visualizer/trajectory (nav_msgs/Path)
+/visualizer/waypoints (visualization_msgs/Marker)
+```
+
+
 __GCOPTER__ is an efficient and versatile multicopter trajectory optimizer built upon a novel sparse trajectory representation named [__MINCO__](https://arxiv.org/pdf/2103.00190.pdf). __User-defined state-input constraints__ for dynamics involving [__nonlinear drag effects__](https://github.com/ZJU-FAST-Lab/GCOPTER/blob/main/misc/flatness.pdf) are supported.
 
 
