@@ -1,7 +1,37 @@
 # GCOPTER
 
-This is a revised version for benchmarking used by Kumar Lab. 
+This is a revised version for benchmarking used by the Kumar Lab. 
 
+## Branches Overview
+
+* **main**: ROS1 implementation
+* **ros2**: ROS2 implementation ([ros2 branch](https://github.com/yuwei-wu/GCOPTER/tree/ros2))
+* **noros**: Pure C++ implementation without ROS ([noros branch](https://github.com/yuwei-wu/GCOPTER/tree/noros))
+
+Each branch contains detailed usage instructions specific to its environment.
+
+## Useage
+
+### Prerequisites
+
+Make sure you have ROS1 installed if you are using the `main` branch. Additionally, install the following dependencies:
+
+```bash
+sudo apt update
+sudo apt install libpcl-dev libompl-dev
+```
+
+### Build and Run
+
+```
+mkdir -p test_ws/src
+cd test_ws/src
+git clone https://github.com/yuwei-wu/GCOPTER.git
+cd ../
+catkin build
+source devel/setup.bash
+roslaunch gcopter global_planning.launch
+```
 
 __GCOPTER__ is an efficient and versatile multicopter trajectory optimizer built upon a novel sparse trajectory representation named [__MINCO__](https://arxiv.org/pdf/2103.00190.pdf). __User-defined state-input constraints__ for dynamics involving [__nonlinear drag effects__](https://github.com/ZJU-FAST-Lab/GCOPTER/blob/main/misc/flatness.pdf) are supported.
 
