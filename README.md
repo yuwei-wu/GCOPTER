@@ -1,6 +1,102 @@
 # GCOPTER
 
-This is a revised version for benchmarking used by Kumar Lab. 
+This is a revised, pure C++ version of GCOPTER for global trajectory planning and corridor generation.
+
+---
+
+## Build & Run Instructions
+
+```bash
+mkdir build && cd build
+cmake ..
+make
+cd ..
+./build/global_planning_demo input.yaml
+```
+
+---
+
+## Input Configuration (input.yaml)
+
+Example `input.yaml`:
+
+```yaml
+config_path: "config/global_planning.yaml"
+map_path: "config/obs.txt"
+
+start:
+  x: -1.0
+  y: -1.0
+  z: 1.5
+
+goal:
+  x: 8.0
+  y: 0.0
+  z: 1.0
+```
+
+* `config_path`: Path to the global planning configuration file.
+* `map_path`: Path to the environment map (obstacles), either in `.txt` format or converted from `.pcd`.
+
+---
+
+## Changing Input Maps
+
+You can use either `.txt` files or `.pcd` point cloud files as input maps.
+
+To convert a `.pcd` file to `.txt` format, run:
+
+```bash
+python scripts/pcd_to_txt.py --input config/your_map.pcd --output config/obs.txt
+```
+
+---
+
+## Visualization
+
+After running the planner, you can visualize the trajectory, corridors, and obstacles using Python scripts.
+
+```bash
+cd scripts/
+python visualizer.py
+```
+
+Ensure you have the required Python packages installed:
+
+```bash
+pip install open3d numpy matplotlib scipy
+```
+
+---
+
+## Folder Structure
+
+```
+.
+├── gcopter
+│   ├── build/            # Build directory (created after cmake)
+│   ├── CMakeLists.txt
+│   ├── config            # Configuration files and map files (.yaml, .txt, .pcd)
+│   │   ├── global_planning.yaml
+│   │   ├── obs.txt
+│   │   └── pt100001.pcd
+│   ├── include
+│   │   └── gcopter/
+│   ├── input.yaml        # Example input configuration
+│   ├── LICENSE
+│   ├── scripts           # Python scripts for visualization and utilities
+│   │   ├── corridor_utils.py
+│   │   ├── pcd_to_txt.py
+│   │   └── visualizer.py
+│   ├── src
+│   │   └── global_planning.cpp
+│   └── trajectory.txt
+└── README.md
+
+```
+
+
+
 
 
 __GCOPTER__ is an efficient and versatile multicopter trajectory optimizer built upon a novel sparse trajectory representation named [__MINCO__](https://arxiv.org/pdf/2103.00190.pdf). __User-defined state-input constraints__ for dynamics involving [__nonlinear drag effects__](https://github.com/ZJU-FAST-Lab/GCOPTER/blob/main/misc/flatness.pdf) are supported.

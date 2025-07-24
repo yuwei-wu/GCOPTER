@@ -28,6 +28,7 @@
 #include "gcopter/minco.hpp"
 #include "gcopter/flatness.hpp"
 #include "gcopter/lbfgs.hpp"
+#include "gcopter/geo_utils.hpp"
 
 #include <Eigen/Eigen>
 
