@@ -66,7 +66,7 @@ python visualizer.py
 Ensure you have the required Python packages installed:
 
 ```bash
-pip install open3d numpy matplotlib scipy
+pip install open3d numpy matplotlib scipy plotly
 ```
 
 ---
