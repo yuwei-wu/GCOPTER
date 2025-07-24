@@ -8,7 +8,7 @@ This is a revised, pure C++ version of GCOPTER for global trajectory planning an
 
 ```bash
 git clone -b noros https://github.com/yuwei-wu/GCOPTER.git
-cd gcopter
+cd GCOPTER/gcopter
 mkdir build && cd build
 cmake ..
 make
