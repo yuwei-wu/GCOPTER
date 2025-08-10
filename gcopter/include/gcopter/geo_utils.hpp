@@ -84,18 +84,16 @@ namespace geo_utils
         return minmaxsd < -eps && !std::isinf(minmaxsd);
     }
 
-    struct filterLess
-    {
-        inline bool operator()(const Eigen::Vector3d &l,
-                               const Eigen::Vector3d &r)
-        {
-            return l(0) < r(0) ||
-                   (l(0) == r(0) &&
-                    (l(1) < r(1) ||
-                     (l(1) == r(1) &&
-                      l(2) < r(2))));
+    struct filterLess {
+        bool operator()(const Eigen::Vector3d &a, const Eigen::Vector3d &b) const {
+            for (int i = 0; i < 3; i++) {
+                if (a(i) < b(i)) return true;
+                else if (a(i) > b(i)) return false;
+            }
+            return false;
         }
     };
+
 
     inline void filterVs(const Eigen::Matrix3Xd &rV,
                          const double &epsilon,
@@ -106,10 +104,10 @@ namespace geo_utils
         std::set<Eigen::Vector3d, filterLess> filter;
         fV = rV;
         int offset = 0;
-        Eigen::Vector3d quanti;
         for (int i = 0; i < rV.cols(); i++)
         {
-            quanti = (rV.col(i) / res).array().round();
+            const Eigen::Vector3d quanti = (rV.col(i) / res).array().round();
+
             if (filter.find(quanti) == filter.end())
             {
                 filter.insert(quanti);
