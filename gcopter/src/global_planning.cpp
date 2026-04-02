@@ -146,7 +146,7 @@ public:
         std::vector<Eigen::Vector3d> route;
         sfc_gen::planPath<voxel_map::VoxelMap>(startGoal[0], startGoal[1],
                                                voxelMap.getOrigin(), voxelMap.getCorner(),
-                                               &voxelMap, 0.01, route);
+                                               &voxelMap, config.timeoutRRT, route);
 
         std::vector<Eigen::MatrixX4d> hPolys;
         std::vector<Eigen::Vector3d> pc;
